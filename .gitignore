@@ -1,0 +1,33 @@
+# ===== Sistema operacional =====
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ===== IDEs e editores =====
+.idea/
+*.iml
+.vs/
+.vscode/*
+!.vscode/extensions.json
+
+# ===== Backend (Spring Boot / Maven) =====
+target/
+!.mvn/wrapper/maven-wrapper.jar
+HELP.md
+
+# ===== Frontend (Vue / Vite / Node) =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# ===== Variáveis de ambiente com segredos =====
+.env.local
+.env.*.local
+
+# ===== Logs =====
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
