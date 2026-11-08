@@ -135,6 +135,16 @@ class FuncionarioControllerTest {
     }
 
     @Test
+    void atualizarRetorna400QuandoAValidacaoFalha() throws Exception {
+        when(service.atualizarFuncionario(eq(1L), any()))
+                .thenThrow(new IllegalArgumentException("O campo 'cargo' é obrigatório."));
+
+        mvc.perform(put("/funcionarios/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("O campo 'cargo' é obrigatório."));
+    }
+
+    @Test
     void atualizarRetorna404QuandoNaoExiste() throws Exception {
         when(service.atualizarFuncionario(eq(42L), any())).thenReturn(Optional.empty());
 

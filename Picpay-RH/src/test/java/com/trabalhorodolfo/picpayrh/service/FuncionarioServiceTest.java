@@ -100,9 +100,46 @@ class FuncionarioServiceTest {
         assertThat(atualizado.getCargo()).isEqualTo("Dev");
     }
 
+    @ParameterizedTest
+    @CsvSource(nullValues = "NULO", value = {
+            "nome,  NULO",
+            "nome,  '   '",
+            "email, NULO",
+            "email, '   '",
+            "cargo, NULO",
+            "cargo, '   '",
+    })
+    void atualizarRejeitaCampoObrigatorioAusenteSemAlterarORegistro(String campo, String valor) {
+        Long id = salvar("Ana", "Dev", Status.EM_ANALISE).getId();
+        Funcionario dados = funcionario("Bia", "Analista", Status.APROVADO);
+        switch (campo) {
+            case "nome" -> dados.setNome(valor);
+            case "email" -> dados.setEmail(valor);
+            default -> dados.setCargo(valor);
+        }
+
+        assertThatThrownBy(() -> service.atualizarFuncionario(id, dados))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("O campo '" + campo + "' é obrigatório.");
+        Funcionario salvo = service.listarUmFuncionarios(id).orElseThrow();
+        assertThat(salvo.getNome()).isEqualTo("Ana");
+        assertThat(salvo.getStatus()).isEqualTo(Status.EM_ANALISE);
+    }
+
+    @Test
+    void buscaPorNomeContinuaFuncionandoDepoisDeUmaAtualizacaoInvalida() {
+        Long id = salvar("Ana", "Dev", Status.EM_ANALISE).getId();
+        Funcionario semNome = funcionario("Bia", "Analista", Status.APROVADO);
+        semNome.setNome(null);
+
+        assertThatThrownBy(() -> service.atualizarFuncionario(id, semNome))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(nomes(service.buscarFuncionarios("ana", null, null))).containsExactly("Ana");
+    }
+
     @Test
     void atualizacoesDeIdInexistenteRetornamVazio() {
-        assertThat(service.atualizarFuncionario(42L, new Funcionario())).isEmpty();
+        assertThat(service.atualizarFuncionario(42L, funcionario("Ana", "Dev", Status.APROVADO))).isEmpty();
         assertThat(service.atualizarParcialFuncionario(42L, new Funcionario())).isEmpty();
     }
 
