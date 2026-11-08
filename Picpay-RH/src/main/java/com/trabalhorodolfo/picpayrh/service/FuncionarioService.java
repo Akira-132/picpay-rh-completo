@@ -33,6 +33,7 @@ public class FuncionarioService {
     }
 
     public Optional<Funcionario> atualizarFuncionario(Long id, Funcionario dados) {
+        validarObrigatorios(dados);
         return funcionariorepo.findById(id).map(f -> {
             f.setNome(dados.getNome());
             f.setEmail(dados.getEmail());
