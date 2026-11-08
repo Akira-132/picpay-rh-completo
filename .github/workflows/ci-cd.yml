@@ -1,0 +1,75 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (testes e build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Picpay-RH
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: Picpay-RH/pom.xml
+
+      - name: Rodar testes e gerar o jar
+        run: ./mvnw -B verify
+
+  frontend:
+    name: Frontend (tipos e build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: picpay-rh-frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: picpay-rh-frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Checar tipos e gerar o build
+        run: npm run build
+
+  # Os jobs de deploy só rodam em push na main e depois que os dois jobs de CI
+  # passam. O SHA enviado garante que o Render publique o commit que foi testado.
+  deploy-backend:
+    name: Deploy do backend
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acionar o deploy hook do Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
+        run: curl --fail --silent --show-error --max-time 60 --output /dev/null "${RENDER_DEPLOY_HOOK}&ref=${GITHUB_SHA}"
+
+  deploy-frontend:
+    name: Deploy do frontend
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acionar o deploy hook do Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: curl --fail --silent --show-error --max-time 60 --output /dev/null "${RENDER_DEPLOY_HOOK}&ref=${GITHUB_SHA}"
