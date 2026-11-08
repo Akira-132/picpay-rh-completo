@@ -26,7 +26,7 @@ public class FuncionarioController {
     @PostMapping
     public ResponseEntity<Funcionario> cadastrar(@RequestBody Funcionario funcionario) {
         Funcionario criado = funcionarioService.cadastrarFuncionario(funcionario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
+        return ResponseEntity.status(HttpStatus.OK).body(criado);
     }
 
     @GetMapping
